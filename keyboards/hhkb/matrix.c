@@ -119,13 +119,18 @@ uint8_t matrix_scan(void)
             // 10us wait does    work on Teensy++ with pro
             // 10us wait does    work on 328p+iwrap with pro
             // 10us wait doesn't work on tmk PCB(8MHz) with pro2(very lagged scan)
-            _delay_us(5);
+            _delay_us(10);
 
-            if (KEY_STATE()) {
-                matrix[row] &= ~(1<<col);
-            } else {
-                matrix[row] |= (1<<col);
-            }
+            uint8_t key_pressed = KEY_STATE();
+            matrix[row] = (matrix[row] & ~(1<<col)) | (key_pressed << col);
+
+            /*if (KEY_STATE()) {*/
+                /*matrix[row] |= (1<<col);*/
+            /*} else {*/
+                /*matrix[row] &= ~(1<<col);*/
+            /*}*/
+
+            /*matrix_print();*/
 
             // Ignore if this code region execution time elapses more than 20us.
             // MEMO: 20[us] * (TIMER_RAW_FREQ / 1000000)[count per us]
@@ -166,6 +171,7 @@ uint8_t matrix_scan(void)
 
 bool matrix_is_modified(void)
 {
+  return memcmp(matrix, matrix_prev, MATRIX_ROWS) != 0;
     for (uint8_t i = 0; i < MATRIX_ROWS; i++) {
         if (matrix[i] != matrix_prev[i])
             return true;
